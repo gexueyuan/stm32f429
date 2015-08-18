@@ -43,7 +43,7 @@
 
 // <o> Console on USART: <0=> no console <1=>USART 1 <2=>USART 2 <3=> USART 3
 // 	<i>Default: 1
-#define STM32_CONSOLE_USART		1
+#define STM32_CONSOLE_USART		7
 
 void rt_hw_board_init(void);
 
@@ -55,6 +55,8 @@ void rt_hw_board_init(void);
 #define CONSOLE_DEVICE "uart2"
 #elif STM32_CONSOLE_USART == 3
 #define CONSOLE_DEVICE "uart3"
+#elif STM32_CONSOLE_USART == 7
+#define CONSOLE_DEVICE "uart7"
 #endif
 
 #define FINSH_DEVICE_NAME   CONSOLE_DEVICE

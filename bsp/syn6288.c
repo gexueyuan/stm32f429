@@ -18,7 +18,8 @@
 #include "gpio.h"
 #include <rtthread.h>
 #include "finsh.h"
-
+#include "stm32f429i_discovery_sdram.h"
+#include "stm32f4xx_fmc.h"
 
 #define syn6288_DEVICE_NAME	"uart4"
 
@@ -38,6 +39,20 @@ void audio_io_init(void)
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_Init(GPIOE, &GPIO_InitStructure);
     GPIO_SetBits(GPIOE, GPIO_Pin_2);
+}
+void video_io_init(void)
+{
+
+    GPIO_InitTypeDef GPIO_InitStructure;
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
+
+    /* Sound en enable*/
+    GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_10;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_Init(GPIOF, &GPIO_InitStructure);
+    GPIO_SetBits(GPIOF, GPIO_Pin_10);
 }
 
 void play_test(void)
@@ -147,4 +162,123 @@ int audio_init(void)
     return 0;
 
 }
+#define MT48LC8M16A2_SIZE 0x800000
+void sdram_test(void)
+{
+  uint8_t ubWritedata_8b = 0x3C, ubReaddata_8b = 0;  
+  uint16_t uhWritedata_16b = 0x1E5A, uhReaddata_16b = 0;  
+  uint32_t uwReadwritestatus = 0;
+  uint32_t counter = 0x0;
+  /* Erase SDRAM memory */
+  for (counter = 0x00; counter < MT48LC8M16A2_SIZE; counter++)
+  {
+    *(__IO uint8_t*) (SDRAM_BANK_ADDR + counter) = (uint8_t)0x0;
+  }
+  
+  /* Write data value to all SDRAM memory */
+  for (counter = 0; counter < MT48LC8M16A2_SIZE; counter++)
+  {
+  //rt_enter_critical();
+    *(__IO uint8_t*) (SDRAM_BANK_ADDR + counter) = (uint8_t)(ubWritedata_8b + counter);
+   // rt_exit_critical();
+  }
+  
+  /* Read back SDRAM memory and check content correctness*/
+  counter = 0;
+  uwReadwritestatus = 0;
+  while ((counter < MT48LC8M16A2_SIZE) && (uwReadwritestatus == 0))
+  {
+      //rt_enter_critical();
+    ubReaddata_8b = *(__IO uint8_t*)(SDRAM_BANK_ADDR + counter);
+    //rt_exit_critical();
+    if ( ubReaddata_8b != (uint8_t)(ubWritedata_8b + counter))
+    {
+      uwReadwritestatus = 1;
+
+      rt_kprintf("counter is %X %d:%d",counter,ubReaddata_8b,(ubWritedata_8b + counter));
+     // STM_EVAL_LEDOn(LED4);
+      //STM_EVAL_LEDOff(LED3);              
+    }
+    else
+    {
+      //STM_EVAL_LEDOn(LED3);
+      //STM_EVAL_LEDOff(LED4);
+    }
+    counter++;
+  } 
+  
+  if(uwReadwritestatus == 0)
+  {
+    rt_kprintf("  8-bits AHB      \n");
+    rt_kprintf("  Transaction     \n"); 
+    rt_kprintf("  Test-> OK       \n");   
+  }
+  else
+  {
+    rt_kprintf("    8-bits AHB     \n");
+    rt_kprintf("   Transaction     \n"); 
+    rt_kprintf("   Test-> NOT OK   \n");     
+  }
+  
+  /*********************** 16-bits AHB transaction test ***********************/    
+  /* Wait for User button to be pressed */
+ // while (STM_EVAL_PBGetState(BUTTON_USER) != Bit_SET)
+  {}
+  /* Wait for User button is released */
+ // while (STM_EVAL_PBGetState(BUTTON_USER) != Bit_RESET)
+  {}
+  
+  /* Turn Off Leds */   
+  //STM_EVAL_LEDOff(LED3);
+  //STM_EVAL_LEDOff(LED4);
+  
+  /* Erase SDRAM memory */
+  for (counter = 0x00; counter < MT48LC8M16A2_SIZE; counter++)
+  {
+    *(__IO uint16_t*) (SDRAM_BANK_ADDR + 2*counter) = (uint16_t)0x00;
+  }
+  
+  /* Write data value to all SDRAM memory */
+  for (counter = 0; counter < MT48LC8M16A2_SIZE; counter++)
+  {
+    *(__IO uint16_t*) (SDRAM_BANK_ADDR + 2*counter) = (uint16_t)(uhWritedata_16b + counter);
+  }
+  
+  /* Read back SDRAM memory and check content correctness*/
+  counter = 0;
+  uwReadwritestatus = 0;
+  while ((counter < MT48LC8M16A2_SIZE) && (uwReadwritestatus == 0))
+  {
+    uhReaddata_16b = *(__IO uint16_t*)(SDRAM_BANK_ADDR + 2*counter);
+    if ( uhReaddata_16b != (uint16_t)(uhWritedata_16b + counter))
+    {
+      uwReadwritestatus = 1;
+      //STM_EVAL_LEDOn(LED4);
+      //STM_EVAL_LEDOff(LED3);
+      
+      rt_kprintf("counter is %X %d:%d",counter,ubReaddata_8b,(ubWritedata_8b + counter));
+    }
+    else
+    {
+      //STM_EVAL_LEDOn(LED3);
+      //STM_EVAL_LEDOff(LED4);
+    }
+    counter++;
+  }
+  if(uwReadwritestatus == 0)
+  {
+    rt_kprintf("  16-bits AHB     \n");
+    rt_kprintf("  Transaction     \n"); 
+    rt_kprintf("  Test-> OK       \n");   
+  }
+  else
+  {
+    rt_kprintf("    16-bits AHB    \n");
+    rt_kprintf("   Transaction     \n"); 
+    rt_kprintf("   Test-> NOT OK   \n");     
+  }
+  
+}
+
+FINSH_FUNCTION_EXPORT(sdram_test, input:string);
 

@@ -29,7 +29,16 @@
 
 
 extern    void audio_init(void);
+
+extern void video_io_init(void);
+
+extern 	void SDRAM_Init(void);
 extern void gps_init(void);
+
+extern  void LCD_Init(void);
+
+extern void LCD_LayerInit(void);
+
 void rt_init_thread_entry(void* parameter)
 {
     /* GDB STUB */
@@ -216,9 +225,12 @@ rt_kprintf("......................................¶¥¶¥\n");
 rt_kprintf(".......................................¶¥\n");
 #endif
 audio_init();
-gps_init();
+//gps_init();
+//video_io_init();
+//SDRAM_Init();
+LCD_Init();
+LCD_LayerInit();
 
-		
 }
 
 int rt_application_init()
