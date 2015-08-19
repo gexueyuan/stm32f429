@@ -29,6 +29,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f429i_discovery_lcd.h"
 #include "../Common/fonts.c"
+#include "finsh.h"
 
 
 /** @addtogroup Utilities
@@ -250,9 +251,10 @@ void LCD_RESET(void)
 
     //GPIO_PinAFConfig(GPIOI, GPIO_PinSource5, GPIO_AF_LTDC);
     GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_6;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;  
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
                                    
     GPIO_Init(GPIOB, &GPIO_InitStructure);
 
@@ -298,11 +300,11 @@ void LCD_Init(void)
   /* LTDC Configuration *********************************************************/  
   /* Polarity configuration */
   /* Initialize the horizontal synchronization polarity as active low */
-  LTDC_InitStruct.LTDC_HSPolarity = LTDC_HSPolarity_AL;     
+  LTDC_InitStruct.LTDC_HSPolarity = LTDC_HSPolarity_AH;     
   /* Initialize the vertical synchronization polarity as active low */  
-  LTDC_InitStruct.LTDC_VSPolarity = LTDC_VSPolarity_AL;     
+  LTDC_InitStruct.LTDC_VSPolarity = LTDC_VSPolarity_AH;     
   /* Initialize the data enable polarity as active low */
-  LTDC_InitStruct.LTDC_DEPolarity = LTDC_DEPolarity_AL;     
+  LTDC_InitStruct.LTDC_DEPolarity = LTDC_DEPolarity_AH;     
   /* Initialize the pixel clock polarity as input pixel clock */ 
   LTDC_InitStruct.LTDC_PCPolarity = LTDC_PCPolarity_IPC;
   
@@ -318,7 +320,7 @@ void LCD_Init(void)
   /* PLLLCDCLK = PLLSAI_VCO Output/PLLSAI_R = 192/4 = 48 Mhz */
   /* LTDC clock frequency = PLLLCDCLK / RCC_PLLSAIDivR = 48/8 = 6 Mhz */
   RCC_PLLSAIConfig(192, 7, 4);
-  RCC_LTDCCLKDivConfig(RCC_PLLSAIDivR_Div2);
+  RCC_LTDCCLKDivConfig(RCC_PLLSAIDivR_Div2);//24M
   
   /* Enable PLLSAI Clock */
   RCC_PLLSAICmd(ENABLE);
@@ -445,8 +447,8 @@ void LCD_LayerInit(void)
   LCD_SetLayer(LCD_BACKGROUND_LAYER);
   
   /* LCD display message */
-  LCD_Clear(LCD_COLOR_WHITE);
-  LCD_SetTextColor(LCD_COLOR_WHITE); 
+  LCD_Clear(LCD_COLOR_BLUE);
+  LCD_SetTextColor(LCD_COLOR_BLACK); 
   LCD_DisplayStringLine(LCD_LINE_1,(uint8_t*)"  TEST PROGRAM ");
   LCD_DisplayStringLine(LCD_LINE_3,(uint8_t*)"    V1.0.1     ");
   LCD_DisplayStringLine(LCD_LINE_5,(uint8_t*)"      PUSH     ");
@@ -1582,7 +1584,8 @@ void LCD_WriteCommand(uint8_t LCD_Reg)
   LCD_CtrlLinesWrite(LCD_WRX_GPIO_PORT, LCD_WRX_PIN, Bit_RESET);
   
   /* Reset LCD control line(/CS) and Send command */
-  LCD_ChipSelect(DISABLE);
+  //LCD_ChipSelect(DISABLE);  
+  LCD_ChipSelect(ENABLE);
   SPI_I2S_SendData(LCD_SPI, LCD_Reg);
   
   /* Wait until a data is sent(not busy), before config /CS HIGH */
@@ -1591,7 +1594,8 @@ void LCD_WriteCommand(uint8_t LCD_Reg)
   
   while(SPI_I2S_GetFlagStatus(LCD_SPI, SPI_I2S_FLAG_BSY) != RESET);
   
-  LCD_ChipSelect(ENABLE);
+  //LCD_ChipSelect(ENABLE);
+  LCD_ChipSelect(DISABLE);
 }
 
 /**
@@ -1606,7 +1610,8 @@ void LCD_WriteData(uint8_t value)
   LCD_CtrlLinesWrite(LCD_WRX_GPIO_PORT, LCD_WRX_PIN, Bit_SET);
   
   /* Reset LCD control line(/CS) and Send data */  
-  LCD_ChipSelect(DISABLE);
+  //LCD_ChipSelect(DISABLE);  
+  LCD_ChipSelect(ENABLE);
   SPI_I2S_SendData(LCD_SPI, value);
   
   /* Wait until a data is sent(not busy), before config /CS HIGH */
@@ -1615,9 +1620,54 @@ void LCD_WriteData(uint8_t value)
   
   while(SPI_I2S_GetFlagStatus(LCD_SPI, SPI_I2S_FLAG_BSY) != RESET);
   
-  LCD_ChipSelect(ENABLE);
+  //LCD_ChipSelect(ENABLE);
+  LCD_ChipSelect(DISABLE);
 }
 
+uint8_t LCD_ReadData(unsigned char cmd)
+{
+    char temp;
+
+    LCD_WriteCommand(cmd);
+    
+    /* Reset LCD control line(/CS) and Send data */  
+    LCD_ChipSelect(ENABLE);
+    
+    temp = SPI_I2S_ReceiveData(LCD_SPI);//dump
+    
+    /* Wait until a data is recieve(not busy), before config /CS HIGH */
+
+    while(SPI_I2S_GetFlagStatus(LCD_SPI, SPI_I2S_FLAG_RXNE) != RESET) ;
+
+    while(SPI_I2S_GetFlagStatus(LCD_SPI, SPI_I2S_FLAG_BSY) != RESET);
+
+
+    temp = SPI_I2S_ReceiveData(LCD_SPI);
+    
+    /* Wait until a data is recieve(not busy), before config /CS HIGH */
+
+    while(SPI_I2S_GetFlagStatus(LCD_SPI, SPI_I2S_FLAG_RXNE) != RESET) ;
+
+    while(SPI_I2S_GetFlagStatus(LCD_SPI, SPI_I2S_FLAG_BSY) != RESET);
+
+    LCD_ChipSelect(DISABLE);
+
+    return temp;
+
+}
+
+
+void readdata(uint8_t cmd)
+{
+ uint8_t data;
+
+ data = LCD_ReadData(cmd);
+
+rt_kprintf("cmd = %X ,data = %X \n",cmd,data);
+
+}
+
+FINSH_FUNCTION_EXPORT(readdata, cmd);
 /**
   * @brief  Configure the LCD controller (Power On sequence as described in ILI9341 Datasheet)
   * @param  None
@@ -1625,7 +1675,7 @@ void LCD_WriteData(uint8_t value)
   */
 void LCD_PowerOn(void)
 {
-  //LCD_RESET();
+  LCD_RESET();
   
   LCD_WriteCommand(0xB9); //Set_EXTC
   LCD_WriteData(0xFF);    
@@ -1891,7 +1941,7 @@ LCD_WriteCommand(0x3A);  //Set COLMOD
 LCD_WriteData(0x77);    
  
 LCD_WriteCommand(0x11);  //Sleep Out 
-//DelayX1ms(120); 
+delay(20000); 
  
 LCD_WriteCommand(0x29);  //Display On 
 
