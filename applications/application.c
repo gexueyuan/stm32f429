@@ -39,6 +39,17 @@ extern  void LCD_Init(void);
 
 extern void LCD_LayerInit(void);
 
+/**
+  * @brief  Initialize DMA2D module in MCU for lcd control.
+  * @param  None
+  * @retval None
+  */
+static void LCD_dma2d_init(void)
+{
+    /* Enable the DMA2D Clock. */
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2D, ENABLE); 
+}
+
 void rt_init_thread_entry(void* parameter)
 {
     /* GDB STUB */
@@ -229,6 +240,9 @@ audio_init();
 //video_io_init();
 //SDRAM_Init();
 LCD_Init();
+/* Initialize the DMA2D Module. */
+LCD_dma2d_init();
+
 LCD_LayerInit();
 
 }

@@ -300,11 +300,11 @@ void LCD_Init(void)
   /* LTDC Configuration *********************************************************/  
   /* Polarity configuration */
   /* Initialize the horizontal synchronization polarity as active low */
-  LTDC_InitStruct.LTDC_HSPolarity = LTDC_HSPolarity_AH;     
+  LTDC_InitStruct.LTDC_HSPolarity = LTDC_HSPolarity_AL;     
   /* Initialize the vertical synchronization polarity as active low */  
-  LTDC_InitStruct.LTDC_VSPolarity = LTDC_VSPolarity_AH;     
+  LTDC_InitStruct.LTDC_VSPolarity = LTDC_VSPolarity_AL;     
   /* Initialize the data enable polarity as active low */
-  LTDC_InitStruct.LTDC_DEPolarity = LTDC_DEPolarity_AH;     
+  LTDC_InitStruct.LTDC_DEPolarity = LTDC_DEPolarity_AL;     
   /* Initialize the pixel clock polarity as input pixel clock */ 
   LTDC_InitStruct.LTDC_PCPolarity = LTDC_PCPolarity_IPC;
   
@@ -1941,7 +1941,7 @@ LCD_WriteCommand(0x3A);  //Set COLMOD
 LCD_WriteData(0x77);    
  
 LCD_WriteCommand(0x11);  //Sleep Out 
-delay(20000); 
+delay(120000); 
  
 LCD_WriteCommand(0x29);  //Display On 
 
