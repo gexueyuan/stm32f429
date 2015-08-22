@@ -35,9 +35,31 @@ extern void video_io_init(void);
 extern 	void SDRAM_Init(void);
 extern void gps_init(void);
 
-extern  void LCD_Init(void);
+extern  void LCD_Config(void);
+
+extern void LCD_Init(void);
 
 extern void LCD_LayerInit(void);
+
+void Back_light(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOI,ENABLE);
+
+    //GPIO_PinAFConfig(GPIOI, GPIO_PinSource5, GPIO_AF_LTDC);
+    GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_5;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+                                   
+    GPIO_Init(GPIOI, &GPIO_InitStructure);
+
+
+    GPIO_SetBits(GPIOI,GPIO_Pin_5);
+
+}
+
 
 /**
   * @brief  Initialize DMA2D module in MCU for lcd control.
@@ -237,13 +259,16 @@ rt_kprintf(".......................................¶¥\n");
 #endif
 audio_init();
 //gps_init();
-//video_io_init();
-//SDRAM_Init();
-LCD_Init();
+video_io_init();
+SDRAM_Init();
+//LCD_Init();
 /* Initialize the DMA2D Module. */
-LCD_dma2d_init();
+//LCD_dma2d_init();
 
-LCD_LayerInit();
+//LCD_LayerInit();
+Back_light();
+
+LCD_Config();
 
 }
 

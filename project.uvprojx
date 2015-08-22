@@ -887,14 +887,14 @@
               <FilePath>.\bsp\syn6288.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f429i_discovery_lcd.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\bsp\stm32f429i_discovery_lcd.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f429i_discovery_sdram.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\bsp\stm32f429i_discovery_sdram.c</FilePath>
+            </File>
+            <File>
+              <FileName>__LCD.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bsp\__LCD.c</FilePath>
             </File>
           </Files>
         </Group>
