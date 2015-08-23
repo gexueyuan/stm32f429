@@ -41,6 +41,24 @@ extern void LCD_Init(void);
 
 extern void LCD_LayerInit(void);
 
+extern void lcd_open(void);
+
+
+/**
+  * @}
+  */ 
+
+/**
+  * @brief  Initialize DMA2D module in MCU for lcd control.
+  * @param  None
+  * @retval None
+  */
+static void LCD_dma2d_init(void)
+{
+    /* Enable the DMA2D Clock. */
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2D, ENABLE); 
+}
+
 void Back_light(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -58,18 +76,6 @@ void Back_light(void)
 
     GPIO_SetBits(GPIOI,GPIO_Pin_5);
 
-}
-
-
-/**
-  * @brief  Initialize DMA2D module in MCU for lcd control.
-  * @param  None
-  * @retval None
-  */
-static void LCD_dma2d_init(void)
-{
-    /* Enable the DMA2D Clock. */
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2D, ENABLE); 
 }
 
 void rt_init_thread_entry(void* parameter)
@@ -257,7 +263,7 @@ rt_kprintf(".....................................¶¥::¶¥\n");
 rt_kprintf("......................................¶¥¶¥\n");
 rt_kprintf(".......................................¶¥\n");
 #endif
-audio_init();
+//audio_init();
 //gps_init();
 video_io_init();
 SDRAM_Init();
@@ -268,8 +274,9 @@ SDRAM_Init();
 //LCD_LayerInit();
 Back_light();
 
-LCD_Config();
+//LCD_Config();
 
+    lcd_open();
 }
 
 int rt_application_init()

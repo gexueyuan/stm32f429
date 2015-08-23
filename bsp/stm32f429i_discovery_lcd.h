@@ -78,7 +78,7 @@ typedef struct
 #define  LCD_PIXEL_HEIGHT   ((uint16_t)800)
 
 #define LCD_FRAME_BUFFER       ((uint32_t)0xD0000000)
-#define BUFFER_OFFSET          ((uint32_t)0x50000) 
+#define BUFFER_OFFSET          ((uint32_t) 0xBB800)//((uint32_t)0x50000) //((uint32_t)0x120000)//
 /**
  * @brief Uncomment the line below if you want to use user defined Delay function
  *        (for precise timing), otherwise default _delay_ function defined within
